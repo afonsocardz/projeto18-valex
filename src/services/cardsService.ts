@@ -15,29 +15,67 @@ dotenv.config();
 const SECRET: string | undefined = process.env.SECRET || 'banana';
 const cryptr: Cryptr = new Cryptr(SECRET);
 
+export async function blockCard(id: number, password: string) {
+  const card: Card = await isCardExists(id);
+  isCardExpired(card);
+  isCardBlocked(card.isBlocked);
+  validatePassword(password, card.password);
+
+  await cardRepository.update(id, {isBlocked: true});
+
+}
+
+export async function unblockCard(id: number, password: string) {
+  const card: Card = await isCardExists(id);
+  isCardExpired(card);
+  isCardUnblocked(card.isBlocked);
+  validatePassword(password, card.password);
+
+  await cardRepository.update(id, {isBlocked: false});
+
+}
+function validatePassword(password: string, cardPassword: any ) {
+  const isValid = bcrypt.compareSync(password, cardPassword);
+  if (!isValid) {
+    throw { type: "notAuthorized" }
+  }
+}
+
+function isCardUnblocked(isBlocked: boolean) {
+  if (isBlocked === false) {
+    throw { type: "notAllowed", message: "Card is blocked already" };
+  }
+}
+
+function isCardBlocked(isBlocked: boolean) {
+  if (isBlocked === true) {
+    throw { type: "notAllowed", message: "Card is blocked already" };
+  }
+}
+
 export async function activateCard(id: number, cardPassword: string, securityCode: string) {
   const card: Card = await isCardExists(id);
   isCardExpired(card);
   isPasswordValid(card);
   isSecurityCodeValid(card, securityCode);
   const password: string = preparePassword(cardPassword)
-  await cardRepository.update(id, { password });
+  await cardRepository.update(id, { password, isBlocked: false });
 }
 
-function isSecurityCodeValid(card: Card, securityCode:string){
+function isSecurityCodeValid(card: Card, securityCode: string) {
   const decryptedCVC: string = cryptr.decrypt(card.securityCode);
   if (securityCode !== decryptedCVC) {
     throw { type: "notAuthorized" }
   }
 }
 
-function isPasswordValid(card:Card){
+function isPasswordValid(card: Card) {
   if (card.password) {
     throw { type: "notAllowed", message: "Card is actived already" };
   }
 }
 
-function isCardExpired(card: Card){
+function isCardExpired(card: Card) {
   const cardDate = dayjs(`31/${card.expirationDate}`);
   const isExpired = dayjs().isAfter(cardDate)
   if (isExpired) {
@@ -45,7 +83,7 @@ function isCardExpired(card: Card){
   }
 }
 
-async function isCardExists(id: number){
+async function isCardExists(id: number) {
   const card: Card = await cardRepository.findById(id);
   if (!card) {
     throw { type: "notFound", message: "Card not found" };
