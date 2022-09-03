@@ -30,6 +30,79 @@ export async function find() {
   return result.rows;
 }
 
+export async function getCardBalance(id: number){
+  const {rows} = await connection.query(`
+  SELECT
+  balance.total as balance,
+  t."allPayments" as transactions,
+  r."allRecharges" as recharges 
+FROM
+  (
+    SELECT
+      sum(recharges_amount.total - payments_amount.total) AS total
+    FROM
+      (
+        SELECT
+          sum(payments.amount) AS total
+        FROM
+          payments
+      ) AS payments_amount,
+      (
+        SELECT
+          sum(recharges.amount) AS total
+        FROM
+          recharges
+      ) AS recharges_amount,
+      cards
+    WHERE
+      cards.id = $1
+  ) AS balance,
+  (
+    SELECT
+      array_agg(json_build_object(
+        'id',
+        (payments.id),
+        'cardId',
+        (payments."cardId"),
+        'businessId',
+        (payments."businessId"),
+        'businessName',
+        (businesses.name),
+        'timestamp',
+        (payments.timestamp),
+        'amount',
+        (payments.amount)
+      )) as "allPayments"
+    FROM
+      payments
+      JOIN businesses ON businesses.id = payments."businessId"
+      JOIN cards ON cards.id = payments."cardId"
+    WHERE
+      cards.id = $1
+  ) AS t,
+  (
+    SELECT
+      array_agg(json_build_object(
+        'id',
+        (recharges.id),
+        'cardId',
+        (recharges."cardId"),
+        'timestamp',
+        recharges.timestamp,
+        'amount',
+        recharges.amount
+      )) as "allRecharges"
+    FROM
+      recharges
+      JOIN cards ON cards.id = recharges."cardId"
+    WHERE
+      cards.id = $1
+  ) AS r
+  limit 1
+  `, [id]);
+  return rows[0]
+}
+
 export async function findById(id: number) {
   const result = await connection.query<Card, [number]>(
     "SELECT * FROM cards WHERE id=$1",
