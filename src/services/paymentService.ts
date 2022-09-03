@@ -1,5 +1,5 @@
 import { Business } from "../repositories/businessRepository";
-import { Card, getCardAmount } from "../repositories/cardRepository";
+import { Card, getCardBalance } from "../repositories/cardRepository";
 import { Payment } from "../repositories/paymentRepository";
 import * as cardService from '../services/cardsService';
 import * as paymentRepository from "../repositories/paymentRepository";
@@ -18,9 +18,8 @@ export async function createPayment(payment: Payment, password: string){
 }
 
 async function validateCardAmount(amount: number, id: number){
-  const cardAmount = await getCardAmount(id);
-  console.log(cardAmount);
-  if(cardAmount- amount < 0){
+  const card = await getCardBalance(id);
+  if(card.balance - amount < 0){
     throw {type: 'notAllowed', message: 'not sufficient amount'}
   }
 }

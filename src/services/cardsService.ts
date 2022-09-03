@@ -4,10 +4,8 @@ import Cryptr from 'cryptr';
 import bcrypt from 'bcrypt';
 import dayjs from 'dayjs';
 import * as cardRepository from "../repositories/cardRepository";
-import * as companyRepository from "../repositories/companyRepository";
 import * as employeeRepository from "../repositories/employeeRepository";
 import { Card } from "../repositories/cardRepository";
-import { Company } from "../repositories/companyRepository";
 import { Employee } from "../repositories/employeeRepository";
 import { isCompanyExists } from './companyService';
 
@@ -15,6 +13,12 @@ dotenv.config();
 
 const SECRET: string | undefined = process.env.SECRET || 'banana';
 const cryptr: Cryptr = new Cryptr(SECRET);
+
+export async function getCardBalance(id:number){
+  await isCardExists(id);
+  const balance = await cardRepository.getCardBalance(id);
+  return balance;
+}
 
 export async function blockCard(id: number, password: string) {
   const card: Card = await isCardExists(id);

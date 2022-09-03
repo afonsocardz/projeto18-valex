@@ -27,4 +27,10 @@ async function activateCard(req: Request, res: Response) {
   res.sendStatus(200);
 }
 
-export {createCard, activateCard, blockCard, unblockCard};
+async function getCardBalance(req: Request, res: Response) {
+  const {id} = req.params;
+  const cardBalance = await cardService.getCardBalance(Number(id));
+  res.status(200).send(cardBalance);
+}
+
+export {createCard, activateCard, blockCard, unblockCard, getCardBalance};
