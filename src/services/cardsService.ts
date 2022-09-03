@@ -2,13 +2,14 @@ import { faker } from '@faker-js/faker';
 import dotenv from 'dotenv';
 import Cryptr from 'cryptr';
 import bcrypt from 'bcrypt';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import * as cardRepository from "../repositories/cardRepository";
 import * as companyRepository from "../repositories/companyRepository";
 import * as employeeRepository from "../repositories/employeeRepository";
 import { Card } from "../repositories/cardRepository";
 import { Company } from "../repositories/companyRepository";
 import { Employee } from "../repositories/employeeRepository";
+import { isCompanyExists } from './companyService';
 
 dotenv.config();
 
@@ -34,7 +35,7 @@ export async function unblockCard(id: number, password: string) {
   await cardRepository.update(id, {isBlocked: false});
 
 }
-function validatePassword(password: string, cardPassword: any ) {
+export function validatePassword(password: string, cardPassword: string ) {
   const isValid = bcrypt.compareSync(password, cardPassword);
   if (!isValid) {
     throw { type: "notAuthorized" }
@@ -47,7 +48,7 @@ function isCardUnblocked(isBlocked: boolean) {
   }
 }
 
-function isCardBlocked(isBlocked: boolean) {
+export function isCardBlocked(isBlocked: boolean) {
   if (isBlocked === true) {
     throw { type: "notAllowed", message: "Card is blocked already" };
   }
@@ -75,7 +76,13 @@ function isPasswordValid(card: Card) {
   }
 }
 
-function isCardExpired(card: Card) {
+export function isCardActive(card: Card){
+  if(!card.password){
+    throw {type:"notValid", message: "Card is not activated"}
+  }
+}
+
+export function isCardExpired(card: Card) {
   const cardDate = dayjs(`31/${card.expirationDate}`);
   const isExpired = dayjs().isAfter(cardDate)
   if (isExpired) {
@@ -83,7 +90,7 @@ function isCardExpired(card: Card) {
   }
 }
 
-async function isCardExists(id: number) {
+export async function isCardExists(id: number) {
   const card: Card = await cardRepository.findById(id);
   if (!card) {
     throw { type: "notFound", message: "Card not found" };
@@ -129,13 +136,6 @@ async function isEmployeeExists(employeeId: number) {
     throw { type: 'notFound', message: 'Employee not found' };
   }
   return employee;
-}
-
-async function isCompanyExists(key: string) {
-  const company: Company | undefined = await companyRepository.findByApiKey(key);
-  if (!company) {
-    throw { type: 'notFound', message: 'Company not found' };
-  }
 }
 
 function prepareSecurityCode() {

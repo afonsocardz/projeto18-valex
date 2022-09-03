@@ -30,6 +30,37 @@ export async function find() {
   return result.rows;
 }
 
+export async function getCardAmount(id: number){
+  const {rows: [amounts]}: {rows:any} = await connection.query<Card, [number]>(
+  `
+  SELECT
+    sum(recharges.amount) AS "rechargesAmount",
+    pay."paymentsAmount"
+  FROM
+    (
+      SELECT
+        cards.id AS "cardId",
+        sum(payments.amount) AS "paymentsAmount"
+      FROM
+        payments
+        right JOIN cards ON payments."cardId" = cards.id
+      GROUP BY
+        cards.id
+    ) AS pay,
+    cards
+    JOIN recharges ON recharges."cardId" = cards.id
+  WHERE
+    cards.id = $1
+    AND cards.id = pay."cardId"
+  GROUP BY
+    pay."paymentsAmount";
+  `,[id]);
+
+  const {rechargesAmount, paymentsAmount} = amounts;
+  const amount: number = Number(rechargesAmount) - (!paymentsAmount ? 0 : Number(paymentsAmount));
+  return amount;
+}
+
 export async function findById(id: number) {
   const result = await connection.query<Card, [number]>(
     "SELECT * FROM cards WHERE id=$1",
