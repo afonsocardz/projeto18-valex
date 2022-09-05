@@ -60,11 +60,19 @@ export function isCardBlocked(isBlocked: boolean) {
 
 export async function activateCard(id: number, cardPassword: string, securityCode: string) {
   const card: Card = await isCardExists(id);
+  isPasswordValid(cardPassword);
   isCardExpired(card);
-  isPasswordValid(card);
+  isCardAlreadyActivated(card);
   isSecurityCodeValid(card, securityCode);
   const password: string = preparePassword(cardPassword)
   await cardRepository.update(id, { password, isBlocked: false });
+}
+
+function isPasswordValid(password: string){
+  const isValid = /[0-9]{4}/
+  if (!isValid.test(password)){
+    throw {type: 'notValid', message:"password must have 4 digits"}
+  }
 }
 
 function isSecurityCodeValid(card: Card, securityCode: string) {
@@ -74,7 +82,7 @@ function isSecurityCodeValid(card: Card, securityCode: string) {
   }
 }
 
-function isPasswordValid(card: Card) {
+function isCardAlreadyActivated(card: Card) {
   if (card.password) {
     throw { type: "notAllowed", message: "Card is actived already" };
   }
