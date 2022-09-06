@@ -94,6 +94,6 @@ Recharge a card.
 ```json
 //Headers
 {
-  "Authorization": "Bearer <YOUR_API_KEY>",
+  "x-api-key": "YOUR_API_KEY",
 }
 ```
