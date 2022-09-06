@@ -21,7 +21,7 @@ Create a new card.
 ```json
 //Headers
 {
-  "x-api-key": "Bearer <YOUR_API_KEY>",
+  "x-api-key": "YOUR_API_KEY",
 }
 ```
 ### PUT /cards/activate
@@ -50,7 +50,7 @@ Create a new card.
 ```json
 //Headers
 {
-  "x-api-key": "Bearer <YOUR_API_KEY>",
+  "x-api-key": "YOUR_API_KEY",
 }
 ```
 ### PUT /cards/block & /cards/unblock
