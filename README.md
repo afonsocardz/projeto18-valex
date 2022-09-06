@@ -36,23 +36,6 @@ Activate a new card with password.
   "password":"1234"
 }
 ```
-### PUT /cards/create
-Create a new card.
-
- - **API key required**
-```json
-//Body
-{
-  "employeeId": 1,
-  "type": "education"
-}
-```
-```json
-//Headers
-{
-  "x-api-key": "YOUR_API_KEY",
-}
-```
 ### PUT /cards/block & /cards/unblock
 Block or unblock cards.
 
